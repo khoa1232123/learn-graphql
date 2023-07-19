@@ -14,6 +14,7 @@ import session from "express-session";
 import MongoStore from "connect-mongo";
 import { COOKIE_NAME } from "./constants";
 import { Context } from "./types/Context";
+import { PostResolver } from "./resolvers/post";
 
 dotenv.config();
 
@@ -53,7 +54,7 @@ const main = async () => {
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [HelloResolver, UserResolver],
+      resolvers: [HelloResolver, UserResolver, PostResolver],
       validate: false,
     }),
     context: ({req, res}): Context => ({req, res}),

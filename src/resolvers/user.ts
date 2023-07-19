@@ -5,12 +5,14 @@ import { UserMutationResponse } from "../types/UserMutationResponse";
 import { LoginInput, RegisterInput } from "../types/UserInput";
 import { validateRegisterInput } from "../utils/validateRegisterInput";
 import { Context } from "../types/Context";
+import { COOKIE_NAME } from "../constants";
 
 @Resolver()
 export class UserResolver {
   @Mutation((_return) => UserMutationResponse)
   async register(
-    @Arg("registerInput") { email, password, username }: RegisterInput
+    @Arg("registerInput") { email, password, username }: RegisterInput,
+    @Ctx() {req}: Context
   ): Promise<UserMutationResponse> {
     const validateRegisterInputErrors = validateRegisterInput({
       email,
@@ -56,11 +58,13 @@ export class UserResolver {
       });
 
       const createdUser = await User.save(newUser);
+      
+      req.session.userId = createdUser.id;
 
       return {
-        code: 400,
-        success: false,
-        message: "Duplicated username or email",
+        code: 200,
+        success: true,
+        message: "User registration successfully",
         user: createdUser,
       };
     } catch (error) {
@@ -135,10 +139,17 @@ export class UserResolver {
     }
   }
 
-  // @Mutation((_return) => Boolean)
-  // async logout(@Ctx() { req, res }: Context): Promise<boolean> {
-  //   res.clearCookie(COOKIE_NAME);
-
-  //   return true;
-  // }
+  @Mutation((_return) => Boolean)
+  async logout(@Ctx() { req, res }: Context): Promise<boolean> {
+    return new Promise((resolve, _reject) => {
+      res.clearCookie(COOKIE_NAME);
+      req.session.destroy((error) => {
+        if (error) {
+          console.log("Detroying session error", error);
+          resolve(false);
+        }
+        resolve(true);
+      });
+    });
+  }
 }
