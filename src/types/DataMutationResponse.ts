@@ -13,8 +13,14 @@ export class DataMutationResponse implements IMutationResponse {
   // @Field((_type) => ([Post] || Post || User), { nullable: true })
   // data?: Post | User | Post[];
 
-  @Field((_type) => Post || User, { nullable: true })
-  data?: Post | User | Post[];
+  @Field({ nullable: true })
+  post?: Post;
+
+  @Field((_type) => [Post], { nullable: true })
+  posts?: Post[];
+
+  @Field({ nullable: true })
+  user?: User;
 
   @Field((_type) => [FieldError], { nullable: true })
   errors?: FieldError[];

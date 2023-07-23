@@ -8,6 +8,7 @@ import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import { HelloResolver } from "./resolvers/hello";
 import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
+import {} from "apollo-server-express";
 import { UserResolver } from "./resolvers/user";
 import mongoose from "mongoose";
 import session from "express-session";
@@ -15,6 +16,7 @@ import MongoStore from "connect-mongo";
 import { COOKIE_NAME } from "./constants";
 import { Context } from "./types/Context";
 import { PostResolver } from "./resolvers/post";
+import cors from "cors";
 
 dotenv.config();
 
@@ -30,6 +32,13 @@ const main = async () => {
   });
 
   const app = express();
+
+  app.use(
+    cors({
+      origin: 'http://localhost:3000',
+      credentials: true,
+    })
+  );
 
   // Session/Cookie store
   const mongoUrl = process.env.MONGODB_CONNECT || "";
@@ -57,7 +66,7 @@ const main = async () => {
       resolvers: [HelloResolver, UserResolver, PostResolver],
       validate: false,
     }),
-    context: ({req, res}): Context => ({req, res}),
+    context: ({ req, res }): Context => ({ req, res }),
     plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
   });
 
