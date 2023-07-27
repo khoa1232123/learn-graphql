@@ -1,22 +1,21 @@
-import dotenv from "dotenv";
-import "reflect-metadata";
-import express from "express";
-import { createConnection } from "typeorm";
-import { User } from "./entities/User";
-import { Post } from "./entities/Post";
-import { ApolloServer } from "apollo-server-express";
-import { buildSchema } from "type-graphql";
-import { HelloResolver } from "./resolvers/hello";
 import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
-import {} from "apollo-server-express";
-import { UserResolver } from "./resolvers/user";
-import mongoose from "mongoose";
-import session from "express-session";
+import { ApolloServer } from "apollo-server-express";
 import MongoStore from "connect-mongo";
-import { COOKIE_NAME } from "./constants";
-import { Context } from "./types/Context";
-import { PostResolver } from "./resolvers/post";
 import cors from "cors";
+import dotenv from "dotenv";
+import express from "express";
+import session from "express-session";
+import mongoose from "mongoose";
+import "reflect-metadata";
+import { buildSchema } from "type-graphql";
+import { createConnection } from "typeorm";
+import { COOKIE_NAME } from "./constants";
+import { Post } from "./entities/Post";
+import { User } from "./entities/User";
+import { HelloResolver } from "./resolvers/hello";
+import { PostResolver } from "./resolvers/post";
+import { UserResolver } from "./resolvers/user";
+import { Context } from "./types/Context";
 
 dotenv.config();
 

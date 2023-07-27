@@ -4,8 +4,9 @@ import { COOKIE_NAME } from "../constants";
 import { User } from "../entities/User";
 import { Context } from "../types/Context";
 import { DataMutationResponse } from "../types/DataMutationResponse";
-import { LoginInput, RegisterInput } from "../types/UserInput";
+import { ForgotPasswordInput, LoginInput, RegisterInput } from "../types/UserInput";
 import { validateRegisterInput } from "../utils/validateRegisterInput";
+import { sendEmail } from "../utils/sendEmail";
 
 @Resolver()
 export class UserResolver {
@@ -182,5 +183,36 @@ export class UserResolver {
         resolve(true);
       });
     });
+  }
+
+  @Mutation(_return => Boolean)
+  async forgotPassword(@Arg('forgotPasswordInput') forgotPasswordInput: ForgotPasswordInput): Promise<DataMutationResponse>{
+    try {
+      const user = await User.findOne({email: forgotPasswordInput.email});
+
+      if(!user) return {
+        code: 400,
+        success: false,
+        message: `email khong dung ban can, ban co the dien lai email`,
+      };
+
+      let token = "afoapijsdpfo"
+
+      await sendEmail(forgotPasswordInput.email, ` <a href="http://localhost:3000/change-password?token=${token}">Click here to reset your password</a>`)
+
+      return {
+        code: 200,
+        success: true,
+        message: `Chung toi vua gui cho ban 1 email ban co the vao gmail de kiem tra`,
+      }
+
+    } catch (error) {
+      console.log(error);
+      return {
+        code: 500,
+        success: false,
+        message: `Internal server error: ${error.message}`,
+      };
+    }
   }
 }

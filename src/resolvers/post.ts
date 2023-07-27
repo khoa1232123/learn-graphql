@@ -1,5 +1,4 @@
-import { checkAuth } from "../middlewares/checkAuth";
-import { Arg, ID, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
+import { Arg, ID, Mutation, Query, Resolver } from "type-graphql";
 import { Post } from "../entities/Post";
 import { DataMutationResponse } from "../types/DataMutationResponse";
 import { CreatePostInput, UpdatePostInput } from "../types/PostInput";
@@ -32,7 +31,6 @@ export class PostResolver {
   }
 
   @Query((_return) => DataMutationResponse)
-  @UseMiddleware(checkAuth)
   async posts(): Promise<DataMutationResponse> {
     try {
       const posts = await Post.find();
@@ -41,7 +39,7 @@ export class PostResolver {
         code: 200,
         success: true,
         message: "Find post successfully",
-        posts: posts
+        posts: posts,
       };
     } catch (error) {
       console.log(error);
@@ -55,9 +53,8 @@ export class PostResolver {
 
   @Query((_return) => DataMutationResponse)
   async post(
-    @Arg("id", (_type) => ID) id: number,
+    @Arg("id", (_type) => ID) id: number
   ): Promise<DataMutationResponse> {
-    
     try {
       const existingPost = await Post.findOne({ id });
 
