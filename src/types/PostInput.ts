@@ -20,3 +20,12 @@ export class UpdatePostInput {
   @Field()
   text: string;
 }
+
+@InputType()
+export class PostsInput {
+  @Field()
+  limit: number;
+
+  @Field({nullable: true})
+  cursor?: Date;
+}

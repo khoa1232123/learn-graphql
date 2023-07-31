@@ -3,6 +3,7 @@ import { Field, ObjectType } from "type-graphql";
 import { FieldError } from "./FieldError";
 import { IMutationResponse } from "./MutationResponse";
 import { User } from "../entities/User";
+import { PaginatedPosts } from "./PaginatedPosts";
 
 @ObjectType({ implements: IMutationResponse })
 export class DataMutationResponse implements IMutationResponse {
@@ -21,6 +22,9 @@ export class DataMutationResponse implements IMutationResponse {
 
   @Field({ nullable: true })
   user?: User;
+
+  @Field((_type) => PaginatedPosts, {nullable: true})
+  paginatedPosts?: PaginatedPosts
 
   @Field((_type) => [FieldError], { nullable: true })
   errors?: FieldError[];

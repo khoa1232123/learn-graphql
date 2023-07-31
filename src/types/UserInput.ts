@@ -26,3 +26,15 @@ export class ForgotPasswordInput {
   @Field()
   email: string;
 }
+
+@InputType()
+export class ChangePasswordInput {
+  @Field()
+  userId: string;
+  
+  @Field()
+  token: string;
+
+  @Field()
+  newPassword: string
+}
