@@ -16,18 +16,19 @@ import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
 import { Context } from "./types/Context";
+import { Upvote } from "./entities/Upvote";
 
 dotenv.config();
 
 const main = async () => {
-  await createConnection({
+  const connection = await createConnection({
     type: "postgres",
     database: "learn-graphql",
     username: process.env.DB_USERNAME_DEV,
     password: process.env.DB_PASSWORD_DEV,
     logging: true,
     synchronize: true,
-    entities: [User, Post],
+    entities: [User, Post, Upvote],
   });
 
   const app = express();
@@ -65,7 +66,7 @@ const main = async () => {
       resolvers: [HelloResolver, UserResolver, PostResolver],
       validate: false,
     }),
-    context: ({ req, res }): Context => ({ req, res }),
+    context: ({ req, res }): Context => ({ req, res, connection }),
     plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
   });
 

@@ -1,3 +1,4 @@
+import { checkAuth } from "../middlewares/checkAuth";
 import {
   Arg,
   Ctx,
@@ -8,13 +9,22 @@ import {
   Query,
   Resolver,
   Root,
+  UseMiddleware,
+  registerEnumType,
 } from "type-graphql";
+import { FindManyOptions, LessThan } from "typeorm";
 import { Post } from "../entities/Post";
+import { User } from "../entities/User";
+import { Context } from "../types/Context";
 import { DataMutationResponse } from "../types/DataMutationResponse";
 import { CreatePostInput, UpdatePostInput } from "../types/PostInput";
-import { User } from "../entities/User";
-import { FindManyOptions, LessThan } from "typeorm";
-import { Context } from "../types/Context";
+import { UserInputError } from "apollo-server-core";
+import { Upvote } from "../entities/Upvote";
+import { VoteType } from "../types/VoteType";
+
+registerEnumType(VoteType, {
+  name: "VoteType",
+});
 
 @Resolver((_of) => Post)
 export class PostResolver {
@@ -150,7 +160,7 @@ export class PostResolver {
         };
       }
 
-      if(existingPost.userId !== req.session.userId){
+      if (existingPost.userId !== req.session.userId) {
         return {
           code: 401,
           success: false,
@@ -194,7 +204,7 @@ export class PostResolver {
         };
       }
 
-      if(existingPost.userId !== req.session.userId){
+      if (existingPost.userId !== req.session.userId) {
         return {
           code: 401,
           success: false,
@@ -217,5 +227,45 @@ export class PostResolver {
         message: `Internal server error: ${error.message}`,
       };
     }
+  }
+
+  @Mutation((_return) => DataMutationResponse)
+  @UseMiddleware(checkAuth)
+  async vote(
+    @Arg("postId", (_type) => Int) postId: number,
+    @Arg("voteType", (_type) => VoteType) voteType: VoteType,
+    @Ctx()
+    {
+      req: {
+        session: { userId },
+      },
+      connection,
+    }: Context
+  ): Promise<DataMutationResponse> {
+    return await connection.transaction(async (transactionEntityManager) => {
+      let post = await transactionEntityManager.findOne(Post, postId);
+      if (!post) {
+        throw new UserInputError("Post not found");
+      }
+
+      const newVote = transactionEntityManager.create(Upvote, {
+        userId,
+        postId,
+        value: voteType,
+      });
+
+      await transactionEntityManager.save(newVote);
+
+      post.points = post.points + voteType;
+
+      post = await transactionEntityManager.save(post);
+
+      return {
+        code: 200,
+        success: true,
+        message: "Post voted",
+        post,
+      };
+    });
   }
 }
