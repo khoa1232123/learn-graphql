@@ -243,22 +243,41 @@ export class PostResolver {
     }: Context
   ): Promise<DataMutationResponse> {
     return await connection.transaction(async (transactionEntityManager) => {
-      let post = await transactionEntityManager.findOne(Post, postId);
-      if (!post) {
-        throw new UserInputError("Post not found");
-      }
+			// check if post exists
+			let post = await transactionEntityManager.findOne(Post, postId)
+			if (!post) {
+				throw new UserInputError('Post not found')
+			}
 
-      const newVote = transactionEntityManager.create(Upvote, {
-        userId,
-        postId,
-        value: voteType,
-      });
+			// check if user has voted or not
+			const existingVote = await transactionEntityManager.findOne(Upvote, {
+				postId,
+				userId
+			})
 
-      await transactionEntityManager.save(newVote);
+			if (existingVote && existingVote.value !== voteType) {
+				await transactionEntityManager.save(Upvote, {
+					...existingVote,
+					value: voteType
+				})
 
-      post.points = post.points + voteType;
+				post = await transactionEntityManager.save(Post, {
+					...post,
+					points: post.points + 2 * voteType
+				})
+			}
 
-      post = await transactionEntityManager.save(post);
+			if (!existingVote) {
+				const newVote = transactionEntityManager.create(Upvote, {
+					userId,
+					postId,
+					value: voteType
+				})
+				await transactionEntityManager.save(newVote)
+
+				post.points = post.points + voteType
+				post = await transactionEntityManager.save(post)
+			}
 
       return {
         code: 200,
