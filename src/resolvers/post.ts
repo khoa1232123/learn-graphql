@@ -1,4 +1,4 @@
-import { checkAuth } from "../middlewares/checkAuth";
+import { UserInputError } from "apollo-server-core";
 import {
   Arg,
   Ctx,
@@ -14,12 +14,12 @@ import {
 } from "type-graphql";
 import { FindManyOptions, LessThan } from "typeorm";
 import { Post } from "../entities/Post";
+import { Upvote } from "../entities/Upvote";
 import { User } from "../entities/User";
+import { checkAuth } from "../middlewares/checkAuth";
 import { Context } from "../types/Context";
 import { DataMutationResponse } from "../types/DataMutationResponse";
 import { CreatePostInput, UpdatePostInput } from "../types/PostInput";
-import { UserInputError } from "apollo-server-core";
-import { Upvote } from "../entities/Upvote";
 import { VoteType } from "../types/VoteType";
 
 registerEnumType(VoteType, {
@@ -34,8 +34,28 @@ export class PostResolver {
   }
 
   @FieldResolver((_return) => User)
-  async user(@Root() root: Post) {
-    return await User.findOne(root.userId);
+  async user(
+    @Root() root: Post,
+    @Ctx() { dataLoaders: { userLoader } }: Context
+  ) {
+    return await userLoader.load(root.userId);
+  }
+
+  @FieldResolver((_return) => Int)
+  async voteType(
+    @Root() root: Post,
+    @Ctx() { req, dataLoaders: { voteTypeLoader } }: Context
+  ) {
+    if (!req.session.userId) return 0;
+    // const existingVote = await Upvote.findOne({
+    //   postId: root.id,
+    //   userId: req.session.userId,
+    // });
+    const existingVote = await voteTypeLoader.load({
+      postId: root.id,
+      userId: req.session.userId,
+    });
+    return existingVote ? existingVote.value : 0;
   }
 
   @Mutation((_return) => DataMutationResponse)
@@ -243,41 +263,41 @@ export class PostResolver {
     }: Context
   ): Promise<DataMutationResponse> {
     return await connection.transaction(async (transactionEntityManager) => {
-			// check if post exists
-			let post = await transactionEntityManager.findOne(Post, postId)
-			if (!post) {
-				throw new UserInputError('Post not found')
-			}
+      // check if post exists
+      let post = await transactionEntityManager.findOne(Post, postId);
+      if (!post) {
+        throw new UserInputError("Post not found");
+      }
 
-			// check if user has voted or not
-			const existingVote = await transactionEntityManager.findOne(Upvote, {
-				postId,
-				userId
-			})
+      // check if user has voted or not
+      const existingVote = await transactionEntityManager.findOne(Upvote, {
+        postId,
+        userId,
+      });
 
-			if (existingVote && existingVote.value !== voteType) {
-				await transactionEntityManager.save(Upvote, {
-					...existingVote,
-					value: voteType
-				})
+      if (existingVote && existingVote.value !== voteType) {
+        await transactionEntityManager.save(Upvote, {
+          ...existingVote,
+          value: voteType,
+        });
 
-				post = await transactionEntityManager.save(Post, {
-					...post,
-					points: post.points + 2 * voteType
-				})
-			}
+        post = await transactionEntityManager.save(Post, {
+          ...post,
+          points: post.points + 2 * voteType,
+        });
+      }
 
-			if (!existingVote) {
-				const newVote = transactionEntityManager.create(Upvote, {
-					userId,
-					postId,
-					value: voteType
-				})
-				await transactionEntityManager.save(newVote)
+      if (!existingVote) {
+        const newVote = transactionEntityManager.create(Upvote, {
+          userId,
+          postId,
+          value: voteType,
+        });
+        await transactionEntityManager.save(newVote);
 
-				post.points = post.points + voteType
-				post = await transactionEntityManager.save(post)
-			}
+        post.points = post.points + voteType;
+        post = await transactionEntityManager.save(post);
+      }
 
       return {
         code: 200,

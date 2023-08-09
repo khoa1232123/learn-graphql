@@ -17,6 +17,7 @@ import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
 import { Context } from "./types/Context";
 import { Upvote } from "./entities/Upvote";
+import { buildDataLoaders } from "./utils/dataLoaders";
 
 dotenv.config();
 
@@ -35,7 +36,7 @@ const main = async () => {
 
   app.use(
     cors({
-      origin: 'http://localhost:3000',
+      origin: "http://localhost:3001",
       credentials: true,
     })
   );
@@ -66,7 +67,12 @@ const main = async () => {
       resolvers: [HelloResolver, UserResolver, PostResolver],
       validate: false,
     }),
-    context: ({ req, res }): Context => ({ req, res, connection }),
+    context: ({ req, res }): Context => ({
+      req,
+      res,
+      connection,
+      dataLoaders: buildDataLoaders(),
+    }),
     plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
   });
 

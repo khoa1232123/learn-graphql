@@ -1,1 +1,1 @@
-export const COOKIE_NAME = 'learn-graphql-cookie'
+export const COOKIE_NAME = "learn-graphql-cookie";
