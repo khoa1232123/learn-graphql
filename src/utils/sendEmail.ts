@@ -6,7 +6,6 @@ export const sendEmail = async (to: string, html: string) => {
   // let testAccount = await nodemailer.createTestAccount();
 
   // console.log({testAccount});
-  
 
   // create reusable transporter object using the default SMTP transport
   let transporter = nodemailer.createTransport({
@@ -14,8 +13,8 @@ export const sendEmail = async (to: string, html: string) => {
     port: 587,
     secure: false, // true for 465, false for other ports
     auth: {
-      user: 'sdx6yjnorutgrdox@ethereal.email', // generated ethereal user
-      pass: 'kWFgpjyu3pxJE5EAEy', // generated ethereal password
+      user: "sdx6yjnorutgrdox@ethereal.email", // generated ethereal user
+      pass: "kWFgpjyu3pxJE5EAEy", // generated ethereal password
     },
     tls: {
       rejectUnauthorized: false, // avoid NodeJs self signed certificate error
@@ -37,5 +36,5 @@ export const sendEmail = async (to: string, html: string) => {
   console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
   // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
 
-  return nodemailer.getTestMessageUrl(info)
+  return nodemailer.getTestMessageUrl(info);
 };

@@ -287,7 +287,7 @@ export class UserResolver {
         };
       }
 
-      const resetPasswordTokenValid = argon2.verify(
+      const resetPasswordTokenValid = await argon2.verify(
         resetPasswordToken.token,
         changePasswordInput.token
       );
